@@ -13,6 +13,9 @@ namespace XPRBalanceDataLogger
 {
     public partial class MainForm : Form
     {
+
+        private System.Windows.Forms.Timer timerAutoSaveCountdown;
+
         // 측정 항목 열거형
         public enum MeasurementType
         {
@@ -98,7 +101,7 @@ namespace XPRBalanceDataLogger
 
         // 자동 저장 관련 필드
         private bool isAutoMeasureEnabled = false;
-        private int stabilityTimeSeconds = 3;
+        private int stabilityTimeSeconds = 1;
         private DateTime doorClosedTime = DateTime.Now;
         private bool isDoorOpen = false;
         private bool wasDoorOpen = false;
@@ -127,7 +130,42 @@ namespace XPRBalanceDataLogger
             // DataGridView 행 색상 설정
             dgvMeasurements.RowsDefaultCellStyle.BackColor = Color.White;
             dgvMeasurements.AlternatingRowsDefaultCellStyle.BackColor = Color.FromArgb(245, 245, 245);
+
+            // 자동 저장 상태 패널 초기화
+            pnlAutoSaveStatus.BackColor = Color.DarkGray;
+            lblAutoSaveStatus.Text = "자동 저장 대기";
+            lblAutoSaveTimer.Text = "";
+
+            // 카운트다운 타이머 초기화
+            timerAutoSaveCountdown = new System.Windows.Forms.Timer();
+            timerAutoSaveCountdown.Interval = 10; // 0.1초마다 업데이트
+            timerAutoSaveCountdown.Tick += TimerAutoSaveCountdown_Tick;
+
+            // DataGridView 설정
+            dgvMeasurements.ScrollBars = ScrollBars.Vertical;
+            dgvMeasurements.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
+
         }
+
+        // 카운트다운 타이머 이벤트 핸들러 추가
+        private void TimerAutoSaveCountdown_Tick(object sender, EventArgs e)
+        {
+            if (isAutoMeasureEnabled && isWaitingForStability && !isDoorOpen && isStable)
+            {
+                TimeSpan timeSinceDoorClosed = DateTime.Now - doorClosedTime;
+                double remainingSeconds = stabilityTimeSeconds - timeSinceDoorClosed.TotalSeconds;
+
+                if (remainingSeconds > 0)
+                {
+                    lblAutoSaveTimer.Text = $"{remainingSeconds:F1}초 후 자동 저장";
+
+                    // 배경색 그라데이션 효과
+                    int greenValue = (int)(255 * (1 - remainingSeconds / stabilityTimeSeconds));
+                    pnlAutoSaveStatus.BackColor = Color.FromArgb(255 - greenValue, greenValue, 0);
+                }
+            }
+        }
+
 
         // 카테고리 콤보박스 초기화
         private void InitializeCategoryComboBox()
@@ -594,9 +632,15 @@ namespace XPRBalanceDataLogger
                 stabilityTimeSeconds = (int)nudStabilityTime.Value;
                 timerDoorCheck.Start();
                 timerAutoSave.Start();
+                timerAutoSaveCountdown.Start(); // 카운트다운 타이머 시작
 
                 btnStartMeasurement.Text = "측정 중지";
                 btnStartMeasurement.BackColor = Color.Red;
+
+                // 자동 저장 상태 패널 활성화
+                pnlAutoSaveStatus.BackColor = Color.DarkOrange;
+                lblAutoSaveStatus.Text = "자동 저장 활성";
+                lblAutoSaveStatus.ForeColor = Color.White;
 
                 // 컨트롤 비활성화
                 cboCategory.Enabled = false;
@@ -611,9 +655,15 @@ namespace XPRBalanceDataLogger
                 isAutoMeasureEnabled = false;
                 timerDoorCheck.Stop();
                 timerAutoSave.Stop();
+                timerAutoSaveCountdown.Stop(); // 카운트다운 타이머 중지
 
                 btnStartMeasurement.Text = "측정 시작";
                 btnStartMeasurement.BackColor = Color.FromArgb(0, 192, 0);
+
+                // 자동 저장 상태 패널 비활성화
+                pnlAutoSaveStatus.BackColor = Color.DarkGray;
+                lblAutoSaveStatus.Text = "자동 저장 대기";
+                lblAutoSaveTimer.Text = "";
 
                 // 컨트롤 활성화
                 cboCategory.Enabled = true;
@@ -682,7 +732,11 @@ namespace XPRBalanceDataLogger
         private void timerAutoSave_Tick(object sender, EventArgs e)
         {
             if (!isConnected || !isAutoMeasureEnabled || !isWaitingForStability)
+            {
+                lblAutoSaveTimer.Text = "조건 대기 중...";
+                pnlAutoSaveStatus.BackColor = Color.DarkOrange;
                 return;
+            }
 
             try
             {
@@ -715,6 +769,12 @@ namespace XPRBalanceDataLogger
         // 자동 저장 수행 메서드
         private void PerformAutoSave()
         {
+            // 저장 중 표시
+            pnlAutoSaveStatus.BackColor = Color.LimeGreen;
+            lblAutoSaveStatus.Text = "저장 중!";
+            lblAutoSaveTimer.Text = "데이터 저장 중...";
+            Application.DoEvents(); // UI 즉시 업데이트
+
             // 샘플 번호 자동 생성
             string autoSampleNumber = txtSampleNumber.Text;
             if (string.IsNullOrWhiteSpace(autoSampleNumber))
@@ -774,6 +834,37 @@ namespace XPRBalanceDataLogger
 
             // 샘플 번호 자동 증가
             IncrementSampleNumberWithPrefix();
+
+            // 저장 후 새로 추가된 행 강조
+            if (dgvMeasurements.Rows.Count > 0)
+            {
+                int lastRowIndex = dgvMeasurements.Rows.Count - 1;
+                dgvMeasurements.Rows[lastRowIndex].DefaultCellStyle.BackColor = Color.LightGreen;
+
+                // 2초 후 원래 색상으로 복원
+                Task.Delay(2000).ContinueWith(t =>
+                {
+                    this.Invoke(new Action(() =>
+                    {
+                        if (lastRowIndex < dgvMeasurements.Rows.Count)
+                        {
+                            dgvMeasurements.Rows[lastRowIndex].DefaultCellStyle.BackColor = Color.White;
+                        }
+                    }));
+                });
+            }
+
+            // 상태 복원
+            Task.Delay(500).ContinueWith(t =>
+            {
+                this.Invoke(new Action(() =>
+                {
+                    pnlAutoSaveStatus.BackColor = Color.DarkOrange;
+                    lblAutoSaveStatus.Text = "자동 저장 활성";
+                    lblAutoSaveTimer.Text = "";
+                }));
+            });
+
         }
 
         private void UpdateDataGridView()
@@ -807,6 +898,14 @@ namespace XPRBalanceDataLogger
                 {
                     dgvMeasurements.Rows[rowIndex].Cells[1].ToolTipText = data.MeasurementType;
                 }
+            }
+
+            // 자동 스크롤 - 마지막 행으로 이동
+            if (dgvMeasurements.Rows.Count > 0)
+            {
+                dgvMeasurements.FirstDisplayedScrollingRowIndex = dgvMeasurements.Rows.Count - 1;
+                dgvMeasurements.ClearSelection();
+                dgvMeasurements.Rows[dgvMeasurements.Rows.Count - 1].Selected = true;
             }
         }
 
@@ -1064,6 +1163,10 @@ namespace XPRBalanceDataLogger
                     return;
                 }
             }
+
+            // 타이머 정지
+            timerAutoSaveCountdown?.Stop();
+
 
             Disconnect();
         }

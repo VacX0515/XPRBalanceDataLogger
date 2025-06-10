@@ -29,6 +29,9 @@
             lblStability = new Label();
             lblUnit = new Label();
             lblWeight = new Label();
+            pnlAutoSaveStatus = new Panel();
+            lblAutoSaveTimer = new Label();
+            lblAutoSaveStatus = new Label();
             pnlControl = new Panel();
             cboCategory = new ComboBox();
             lblCategory = new Label();
@@ -63,6 +66,7 @@
             timerDoorCheck = new System.Windows.Forms.Timer(components);
             pnlConnection.SuspendLayout();
             pnlWeight.SuspendLayout();
+            pnlAutoSaveStatus.SuspendLayout();
             pnlControl.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)nudStabilityTime).BeginInit();
             pnlData.SuspendLayout();
@@ -84,7 +88,7 @@
             pnlConnection.Location = new Point(0, 0);
             pnlConnection.Margin = new Padding(3, 4, 3, 4);
             pnlConnection.Name = "pnlConnection";
-            pnlConnection.Size = new Size(1400, 75);
+            pnlConnection.Size = new Size(1178, 64);
             pnlConnection.TabIndex = 0;
             // 
             // lblConnectionStatus
@@ -196,6 +200,42 @@
             lblWeight.Text = "0.0000000";
             lblWeight.TextAlign = ContentAlignment.MiddleRight;
             // 
+            // pnlAutoSaveStatus
+            // 
+            pnlAutoSaveStatus.BackColor = Color.DarkGray;
+            pnlAutoSaveStatus.BorderStyle = BorderStyle.FixedSingle;
+            pnlAutoSaveStatus.Controls.Add(lblAutoSaveTimer);
+            pnlAutoSaveStatus.Controls.Add(lblAutoSaveStatus);
+            pnlAutoSaveStatus.Location = new Point(12, 251);
+            pnlAutoSaveStatus.Name = "pnlAutoSaveStatus";
+            pnlAutoSaveStatus.Size = new Size(460, 160);
+            pnlAutoSaveStatus.TabIndex = 6;
+            // 
+            // lblAutoSaveTimer
+            // 
+            lblAutoSaveTimer.BackColor = Color.Transparent;
+            lblAutoSaveTimer.Dock = DockStyle.Bottom;
+            lblAutoSaveTimer.Font = new Font("맑은 고딕", 20F, FontStyle.Bold);
+            lblAutoSaveTimer.ForeColor = Color.Yellow;
+            lblAutoSaveTimer.Location = new Point(0, 90);
+            lblAutoSaveTimer.Name = "lblAutoSaveTimer";
+            lblAutoSaveTimer.Size = new Size(458, 68);
+            lblAutoSaveTimer.TabIndex = 1;
+            lblAutoSaveTimer.TextAlign = ContentAlignment.MiddleCenter;
+            // 
+            // lblAutoSaveStatus
+            // 
+            lblAutoSaveStatus.BackColor = Color.Transparent;
+            lblAutoSaveStatus.Dock = DockStyle.Top;
+            lblAutoSaveStatus.Font = new Font("맑은 고딕", 24F, FontStyle.Bold);
+            lblAutoSaveStatus.ForeColor = Color.White;
+            lblAutoSaveStatus.Location = new Point(0, 0);
+            lblAutoSaveStatus.Name = "lblAutoSaveStatus";
+            lblAutoSaveStatus.Size = new Size(458, 90);
+            lblAutoSaveStatus.TabIndex = 0;
+            lblAutoSaveStatus.Text = "자동 저장 대기";
+            lblAutoSaveStatus.TextAlign = ContentAlignment.MiddleCenter;
+            // 
             // pnlControl
             // 
             pnlControl.BorderStyle = BorderStyle.FixedSingle;
@@ -212,7 +252,7 @@
             pnlControl.Controls.Add(btnSave);
             pnlControl.Controls.Add(txtSampleNumber);
             pnlControl.Controls.Add(lblSampleNumber);
-            pnlControl.Location = new Point(12, 250);
+            pnlControl.Location = new Point(12, 426);
             pnlControl.Margin = new Padding(3, 4, 3, 4);
             pnlControl.Name = "pnlControl";
             pnlControl.Size = new Size(460, 250);
@@ -362,10 +402,10 @@
             // 
             pnlData.BorderStyle = BorderStyle.FixedSingle;
             pnlData.Controls.Add(dgvMeasurements);
-            pnlData.Location = new Point(500, 88);
+            pnlData.Location = new Point(492, 85);
             pnlData.Margin = new Padding(3, 4, 3, 4);
             pnlData.Name = "pnlData";
-            pnlData.Size = new Size(888, 700);
+            pnlData.Size = new Size(664, 700);
             pnlData.TabIndex = 3;
             // 
             // dgvMeasurements
@@ -377,9 +417,10 @@
             dgvMeasurements.Location = new Point(0, 0);
             dgvMeasurements.Margin = new Padding(3, 4, 3, 4);
             dgvMeasurements.Name = "dgvMeasurements";
-            dgvMeasurements.RowHeadersWidth = 62;
+            dgvMeasurements.RowHeadersWidth = 30;
             dgvMeasurements.RowTemplate.Height = 23;
-            dgvMeasurements.Size = new Size(886, 698);
+            dgvMeasurements.ScrollBars = ScrollBars.Vertical;
+            dgvMeasurements.Size = new Size(662, 698);
             dgvMeasurements.TabIndex = 0;
             dgvMeasurements.CellClick += dgvMeasurements_CellClick;
             dgvMeasurements.CellDoubleClick += dgvMeasurements_CellDoubleClick;
@@ -391,21 +432,19 @@
             colIndex.MinimumWidth = 8;
             colIndex.Name = "colIndex";
             colIndex.ReadOnly = true;
-            colIndex.Width = 60;
+            colIndex.Width = 50;
             // 
             // colSampleNumber
             // 
             colSampleNumber.HeaderText = "샘플 번호";
             colSampleNumber.MinimumWidth = 8;
             colSampleNumber.Name = "colSampleNumber";
-            colSampleNumber.Width = 150;
             // 
             // colWeight
             // 
             colWeight.HeaderText = "무게";
             colWeight.MinimumWidth = 8;
             colWeight.Name = "colWeight";
-            colWeight.Width = 180;
             // 
             // colUnit
             // 
@@ -413,7 +452,7 @@
             colUnit.MinimumWidth = 8;
             colUnit.Name = "colUnit";
             colUnit.ReadOnly = true;
-            colUnit.Width = 60;
+            colUnit.Width = 40;
             // 
             // colDateTime
             // 
@@ -421,7 +460,7 @@
             colDateTime.MinimumWidth = 8;
             colDateTime.Name = "colDateTime";
             colDateTime.ReadOnly = true;
-            colDateTime.Width = 180;
+            colDateTime.Width = 130;
             // 
             // colEdit
             // 
@@ -430,7 +469,7 @@
             colEdit.Name = "colEdit";
             colEdit.Text = "수정";
             colEdit.UseColumnTextForButtonValue = true;
-            colEdit.Width = 60;
+            colEdit.Width = 45;
             // 
             // colDelete
             // 
@@ -439,7 +478,7 @@
             colDelete.Name = "colDelete";
             colDelete.Text = "삭제";
             colDelete.UseColumnTextForButtonValue = true;
-            colDelete.Width = 60;
+            colDelete.Width = 45;
             // 
             // pnlDataControl
             // 
@@ -447,7 +486,7 @@
             pnlDataControl.Controls.Add(btnImportExcel);
             pnlDataControl.Controls.Add(btnExportExcel);
             pnlDataControl.Controls.Add(btnClearAll);
-            pnlDataControl.Location = new Point(12, 508);
+            pnlDataControl.Location = new Point(12, 684);
             pnlDataControl.Margin = new Padding(3, 4, 3, 4);
             pnlDataControl.Name = "pnlDataControl";
             pnlDataControl.Size = new Size(460, 75);
@@ -490,9 +529,9 @@
             // 
             statusStrip.ImageScalingSize = new Size(24, 24);
             statusStrip.Items.AddRange(new ToolStripItem[] { toolStripStatusLabel });
-            statusStrip.Location = new Point(0, 615);
+            statusStrip.Location = new Point(0, 798);
             statusStrip.Name = "statusStrip";
-            statusStrip.Size = new Size(1400, 22);
+            statusStrip.Size = new Size(1178, 22);
             statusStrip.TabIndex = 5;
             statusStrip.Text = "statusStrip1";
             // 
@@ -504,24 +543,25 @@
             // 
             // timerWeight
             // 
-            timerWeight.Interval = 500;
+            timerWeight.Interval = 100;
             timerWeight.Tick += timerWeight_Tick;
             // 
             // timerAutoSave
             // 
-            timerAutoSave.Interval = 1000;
+            timerAutoSave.Interval = 500;
             timerAutoSave.Tick += timerAutoSave_Tick;
             // 
             // timerDoorCheck
             // 
-            timerDoorCheck.Interval = 500;
+            timerDoorCheck.Interval = 100;
             timerDoorCheck.Tick += timerDoorCheck_Tick;
             // 
             // MainForm
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(1400, 637);
+            ClientSize = new Size(1178, 820);
+            Controls.Add(pnlAutoSaveStatus);
             Controls.Add(statusStrip);
             Controls.Add(pnlDataControl);
             Controls.Add(pnlData);
@@ -538,6 +578,7 @@
             pnlConnection.PerformLayout();
             pnlWeight.ResumeLayout(false);
             pnlWeight.PerformLayout();
+            pnlAutoSaveStatus.ResumeLayout(false);
             pnlControl.ResumeLayout(false);
             pnlControl.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)nudStabilityTime).EndInit();
@@ -563,6 +604,9 @@
         private System.Windows.Forms.Label lblStability;
         private System.Windows.Forms.Label lblUnit;
         private System.Windows.Forms.Label lblWeight;
+        private System.Windows.Forms.Panel pnlAutoSaveStatus;
+        private System.Windows.Forms.Label lblAutoSaveStatus;
+        private System.Windows.Forms.Label lblAutoSaveTimer;
         private System.Windows.Forms.Panel pnlControl;
         private System.Windows.Forms.ComboBox cboCategory;
         private System.Windows.Forms.Label lblCategory;
